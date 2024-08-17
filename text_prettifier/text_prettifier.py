@@ -1,254 +1,246 @@
 import re 
 import contractions
-from nltk.corpus import stopwords
+from .utils.patterns import Patterns
 from internet_words_remover import words_remover
 class TextPrettifier:
+    __EMOJI_PATTERN = Patterns().emoji_pattern()
+    __HTML_PATTERN = Patterns().html_pattern()
+    __URL_PATTERN = Patterns().url_pattern()
+    __NUMBER_PATTERN = Patterns().number_pattern()
+    __SPECIAL_CHAR_PUNCTUATION_PATTERN = Patterns().special_char_punctuation_pattern()
+    __STOP_WORDS = Patterns().stopword_pattern()
+
     def __init__(self) -> None:
         """
         Initialize the TextPrettifier object.
+        
+        The constructor is empty because all necessary initialization is done
+        at the class level with class attributes.
         """
-        self.__pattern_html_tags=re.compile('<.*?>')
-        self.__pattern_urls=re.compile(r"https?://\S+|www\.\S+|git@\S+")
-        self.__pattern_special_char_punctuations=re.compile(r'[!"#$%&\'()*+,\-./:;<=>?@\[\\\]^_`{|}~]')
-        self.__pattern_numbers=re.compile(r"\d+")
-        self.__all_stopwords=set(stopwords.words('english'))
-        self.__pattern_stopwords = r'\b(?:{})\b'.format('|'.join(self.__all_stopwords))
-        self.__emoji_pattern = re.compile("["
-                                u"\U0001F600-\U0001F64F"  # emoticons
-                                u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-                                u"\U0001F680-\U0001F6FF"  # transport & map symbols
-                                u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-                                u"\U00002500-\U00002BEF"  # chinese char
-                                u"\U00002702-\U000027B0"
-                                u"\U00002702-\U000027B0"
-                                u"\U000024C2-\U0001F251"
-                                u"\U0001f926-\U0001f937"
-                                u"\U00010000-\U0010ffff"
-                                u"\u2640-\u2642"
-                                u"\u2600-\u2B55"
-                                u"\u200d"
-                                u"\u23cf"
-                                u"\u23e9"
-                                u"\u231a"
-                                u"\ufe0f"  # dingbats
-                                u"\u3030"
-                                "]+", flags=re.UNICODE)
-    def remove_emojis(self,text):
-        return self.__emoji_pattern.sub(r'', text) 
-    def remove_html_tags(self,text:str)->str:
+        pass
+
+    def remove_emojis(self, text: str) -> str:
         """
-        Remove HTML tags from text.
+        Remove emojis from the input text.
 
         Parameters:
-        ------
-        text (str): The input text containing HTML tags.
+        ----------
+        text : str
+            The input text containing emojis.
 
         Returns:
-        ------
-        str: Text with HTML tags removed.
+        -------
+        str
+            The text with emojis removed.
 
         Example:
-        ------
+        --------
         >>> cleaner = TextPrettifier()
-        >>> cleaner.remove_html_tags('<p>Hello</p>')
-        
-        Output:
-        ------
-        'Hello'
+        >>> cleaner.remove_emojis('Hello 😊 world! 🌍')
+        'Hello  world! '
         """
-        text=re.sub(self.__pattern_html_tags,'',text).strip()
-        # for extra spaces
-        text=re.sub(r'\s+', ' ', text).strip()
-        return text
-    
-    def remove_urls(self,text:str)->str:
+        return self.__EMOJI_PATTERN.sub(r'', text)
+
+    def remove_html_tags(self, text: str) -> str:
         """
-        Remove URLs from text.
+        Remove HTML tags from the input text.
 
         Parameters:
-        ------
-        text (str): The input text containing URLs.
+        ----------
+        text : str
+            The input text containing HTML tags.
 
         Returns:
-        str: Text with URLs removed.
+        -------
+        str
+            The text with HTML tags removed.
 
         Example:
-        ------
+        --------
         >>> cleaner = TextPrettifier()
-        >>> cleaner.remove_urls('Visit our website at https://example.com')
-        
-        Output:
-        ------
-        'Visit our website at'
-        """
-        text=re.sub(self.__pattern_urls,'',text).strip()
-        # for extra spaces
-        text=re.sub(r'\s+', ' ', text).strip()
-        return text
-    
-    def remove_numbers(self,text:str)->str:
-        """
-        Remove numbers from text.
-
-        Parameters:
-        ------
-        text (str): The input text containing numbers.
-
-        Returns:
-        ------
-        str: Text with numbers removed.
-
-        Example:
-        ------
-        >>> cleaner = TextPrettifier()
-        >>> cleaner.remove_numbers('There are 123 apples')
-        
-        Output:
-        ------
-        'There are apples'
-        """
-        text=re.sub(self.__pattern_numbers,'',text).strip()
-        # for extra spaces
-        text=re.sub(r'\s+', ' ', text).strip()
-        return text
-    
-    def remove_special_chars(self,text:str)->str:
-        """
-        Remove special characters and punctuations from text.
-
-        Parameters:
-        ------
-        text (str): The input text containing special characters and punctuations.
-
-        Returns:
-        ------
-        str: Text with special characters and punctuations removed.
-
-        Example:
-        ------
-        >>> cleaner = TextPrettifier()
-        >>> cleaner.remove_special_chars('Hello, world!')
-        
-        Output:
-        ------
+        >>> cleaner.remove_html_tags('<p>Hello</p> <b>world</b>')
         'Hello world'
         """
-        text=re.sub(self.__pattern_special_char_punctuations,'',text).strip()
-        # for extra spaces
-        text=re.sub(r'\s+', ' ', text).strip()
-        return text
-    
-    def remove_contractions(self,text:str)->str:
-        """
-        Expand contractions in text.
-
-        Parameters:
-        ------
-        text (str): The input text containing contractions.
-
-        Returns:
-        ------
-        str: Text with contractions expanded.
-
-        Example:
-        ------
-        >>> cleaner = TextPrettifier()
-        >>> cleaner.remove_contractions("I can't do it")
-        
-        Output:
-        ------
-        'I cannot do it'
-        """
-        text=contractions.fix(text).strip()
-        # for extra spaces
-        text=re.sub(r'\s+', ' ', text).strip()
-        return text
-    
-    def remove_stopwords(self,text:str)->str:
-        """
-        Remove stopwords from text.
-
-        Parameters:
-        ------
-        text (str): The input text containing stopwords.
-
-        Returns:
-        ------
-        str: Text with stopwords removed.
-
-        Example:
-        ------
-        >>> cleaner = TextPrettifier()
-        >>> cleaner.remove_stopwords('This is a test')
-        
-        Output:
-        ------
-        'This test'
-        """
-        text=re.sub(self.__pattern_stopwords,'',text,flags=re.IGNORECASE).strip()
-        # for extra spaces
-        text=re.sub(r'\s+', ' ', text).strip()
-        
-        
-        return text
-    
-    def remove_internet_words(self,text:str):
-        """
-        Remove internet slang words from text.
-
-        Parameters:
-        ------
-        text (str): The input text containing internet slang words.
-
-        Returns:
-        ------
-        str: Text with internet slang words removed.
-
-        Example:
-        ------
-        >>> cleaner = TextPrettifier()
-        >>> cleaner.removing_internet_words('This is an osm moment of my life.')
-        
-        Output:
-        ------
-        'This is an awesome moment of my life.'
-        """
-        text=words_remover(text).strip()
-        # for extra spaces
-        text=re.sub(r'\s+', ' ', text).strip()
-        
+        text = re.sub(self.__HTML_PATTERN, '', text).strip()
+        text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    def sigma_cleaner(self,text:str,is_token:bool=False,is_lower:bool=False):
+    def remove_urls(self, text: str) -> str:
         """
-        Apply all cleaning methods to text.
+        Remove URLs from the input text.
 
         Parameters:
-        ------
-        text (str): The input text to be cleaned.
+        ----------
+        text : str
+            The input text containing URLs.
 
         Returns:
-        ------
-        str: Cleaned text after applying all cleaning methods.
-        list: Cleaned list after applying all cleaning methods if is_token is True 
+        -------
+        str
+            The text with URLs removed.
 
         Example:
-        ------
+        --------
         >>> cleaner = TextPrettifier()
-        >>> cleaner.sigma_cleaner('This is a <p>test</p> with 123 numbers')
-        
-        Output:
-        ------
-        'This test numbers'
+        >>> cleaner.remove_urls('Check this out: https://example.com')
+        'Check this out:'
         """
-        text=self.remove_emojis(text)
-        text=self.remove_internet_words(text)
-        text=self.remove_html_tags(text)
-        text=self.remove_urls(text)
-        text=self.remove_numbers(text)
-        text=self.remove_special_chars(text)
-        text=self.remove_contractions(text)
-        text=self.remove_stopwords(text)
+        text = re.sub(self.__URL_PATTERN, '', text).strip()
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+
+    def remove_numbers(self, text: str) -> str:
+        """
+        Remove numbers from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing numbers.
+
+        Returns:
+        -------
+        str
+            The text with numbers removed.
+
+        Example:
+        --------
+        >>> cleaner = TextPrettifier()
+        >>> cleaner.remove_numbers('There are 123 apples and 456 oranges.')
+        'There are apples and oranges.'
+        """
+        text = re.sub(self.__NUMBER_PATTERN, '', text).strip()
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+
+    def remove_special_chars(self, text: str) -> str:
+        """
+        Remove special characters and punctuations from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing special characters and punctuations.
+
+        Returns:
+        -------
+        str
+            The text with special characters and punctuations removed.
+
+        Example:
+        --------
+        >>> cleaner = TextPrettifier()
+        >>> cleaner.remove_special_chars('Hello, world!')
+        'Hello world'
+        """
+        text = re.sub(self.__SPECIAL_CHAR_PUNCTUATION_PATTERN, '', text).strip()
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+
+    def remove_contractions(self, text: str) -> str:
+        """
+        Expand contractions in the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing contractions.
+
+        Returns:
+        -------
+        str
+            The text with contractions expanded.
+
+        Example:
+        --------
+        >>> cleaner = TextPrettifier()
+        >>> cleaner.remove_contractions("I can't do it.")
+        'I cannot do it.'
+        """
+        text = contractions.fix(text).strip()
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+
+    def remove_stopwords(self, text: str) -> str:
+        """
+        Remove stopwords from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing stopwords.
+
+        Returns:
+        -------
+        str
+            The text with stopwords removed.
+
+        Example:
+        --------
+        >>> cleaner = TextPrettifier()
+        >>> cleaner.remove_stopwords('This is a test sentence.')
+        'This test sentence.'
+        """
+        text = re.sub(self.__STOP_WORDS, '', text, flags=re.IGNORECASE).strip()
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+
+    def remove_internet_words(self, text: str) -> str:
+        """
+        Remove internet slang words from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing internet slang words.
+
+        Returns:
+        -------
+        str
+            The text with internet slang words replaced.
+
+        Example:
+        --------
+        >>> cleaner = TextPrettifier()
+        >>> cleaner.remove_internet_words('This is an osm moment.')
+        'This is an awesome moment.'
+        """
+        text = words_remover(text).strip()
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+
+    def sigma_cleaner(self, text: str, is_token: bool = False, is_lower: bool = False):
+        """
+        Apply all cleaning methods to the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text to be cleaned.
+        is_token : bool, optional
+            If True, returns the text as a list of tokens. Default is False.
+        is_lower : bool, optional
+            If True, converts the text to lowercase. Default is False.
+
+        Returns:
+        -------
+        str or list
+            Cleaned text as a string or list of tokens based on `is_token`.
+        
+        Example:
+        --------
+        >>> cleaner = TextPrettifier()
+        >>> cleaner.sigma_cleaner('Hello <b>world</b>! 123 :)', is_token=True, is_lower=True)
+        ['hello', 'world', '']
+        """
+        text = self.remove_emojis(text)
+        text = self.remove_internet_words(text)
+        text = self.remove_html_tags(text)
+        text = self.remove_urls(text)
+        text = self.remove_numbers(text)
+        text = self.remove_special_chars(text)
+        text = self.remove_contractions(text)
+        text = self.remove_stopwords(text)
         if is_lower and is_token:
             return text.lower().split()
         elif is_lower:
@@ -257,7 +249,26 @@ class TextPrettifier:
             return text.split()
         else:
             return text
-    
+
     def __str__(self) -> str:
+        """
+        Return a string representation of the TextPrettifier object.
+
+        Returns:
+        -------
+        str
+            A string indicating that the object is for text purification.
+
+        Example:
+        --------
+        >>> cleaner = TextPrettifier()
+        >>> print(cleaner)
+        Purify the Text!!
+        """
         return "Purify the Text!!"
-tp=TextPrettifier()
+
+if __name__ == "__main__":
+    tp=TextPrettifier()
+    text="Hello, how are you?"
+    print(tp.sigma_cleaner(text,is_token=True,is_lower=True))
+    
