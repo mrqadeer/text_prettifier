@@ -1,7 +1,16 @@
 import re 
 import contractions
+import asyncio
+import concurrent.futures
+from typing import List, Union, Optional, Callable, Dict, Any, Tuple
+from functools import partial
 from .utils.patterns import Patterns
 from internet_words_remover import words_remover
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from multiprocessing import cpu_count
+
+lemmatizer = WordNetLemmatizer()
+
 class TextPrettifier:
     __EMOJI_PATTERN = Patterns().emoji_pattern()
     __HTML_PATTERN = Patterns().html_pattern()
@@ -10,14 +19,16 @@ class TextPrettifier:
     __SPECIAL_CHAR_PUNCTUATION_PATTERN = Patterns().special_char_punctuation_pattern()
     __STOP_WORDS = Patterns().stopword_pattern()
 
-    def __init__(self) -> None:
+    def __init__(self, max_workers: Optional[int] = None) -> None:
         """
         Initialize the TextPrettifier object.
         
-        The constructor is empty because all necessary initialization is done
-        at the class level with class attributes.
+        Parameters:
+        ----------
+        max_workers : Optional[int]
+            Maximum number of worker threads. If None, defaults to the number of CPUs.
         """
-        pass
+        self.max_workers = max_workers or cpu_count()
 
     def remove_emojis(self, text: str) -> str:
         """
@@ -40,6 +51,23 @@ class TextPrettifier:
         'Hello  world! '
         """
         return self.__EMOJI_PATTERN.sub(r'', text)
+
+    async def remove_emojis_async(self, text: str) -> str:
+        """
+        Asynchronously remove emojis from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing emojis.
+
+        Returns:
+        -------
+        str
+            The text with emojis removed.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.remove_emojis, text)
 
     def remove_html_tags(self, text: str) -> str:
         """
@@ -65,6 +93,23 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
+    async def remove_html_tags_async(self, text: str) -> str:
+        """
+        Asynchronously remove HTML tags from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing HTML tags.
+
+        Returns:
+        -------
+        str
+            The text with HTML tags removed.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.remove_html_tags, text)
+
     def remove_urls(self, text: str) -> str:
         """
         Remove URLs from the input text.
@@ -88,6 +133,23 @@ class TextPrettifier:
         text = re.sub(self.__URL_PATTERN, '', text).strip()
         text = re.sub(r'\s+', ' ', text).strip()
         return text
+
+    async def remove_urls_async(self, text: str) -> str:
+        """
+        Asynchronously remove URLs from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing URLs.
+
+        Returns:
+        -------
+        str
+            The text with URLs removed.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.remove_urls, text)
 
     def remove_numbers(self, text: str) -> str:
         """
@@ -113,6 +175,23 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
+    async def remove_numbers_async(self, text: str) -> str:
+        """
+        Asynchronously remove numbers from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing numbers.
+
+        Returns:
+        -------
+        str
+            The text with numbers removed.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.remove_numbers, text)
+
     def remove_special_chars(self, text: str) -> str:
         """
         Remove special characters and punctuations from the input text.
@@ -136,6 +215,23 @@ class TextPrettifier:
         text = re.sub(self.__SPECIAL_CHAR_PUNCTUATION_PATTERN, '', text).strip()
         text = re.sub(r'\s+', ' ', text).strip()
         return text
+
+    async def remove_special_chars_async(self, text: str) -> str:
+        """
+        Asynchronously remove special characters and punctuations from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing special characters and punctuations.
+
+        Returns:
+        -------
+        str
+            The text with special characters and punctuations removed.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.remove_special_chars, text)
 
     def remove_contractions(self, text: str) -> str:
         """
@@ -161,6 +257,23 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
+    async def remove_contractions_async(self, text: str) -> str:
+        """
+        Asynchronously expand contractions in the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing contractions.
+
+        Returns:
+        -------
+        str
+            The text with contractions expanded.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.remove_contractions, text)
+
     def remove_stopwords(self, text: str) -> str:
         """
         Remove stopwords from the input text.
@@ -184,6 +297,23 @@ class TextPrettifier:
         text = re.sub(self.__STOP_WORDS, '', text, flags=re.IGNORECASE).strip()
         text = re.sub(r'\s+', ' ', text).strip()
         return text
+
+    async def remove_stopwords_async(self, text: str) -> str:
+        """
+        Asynchronously remove stopwords from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing stopwords.
+
+        Returns:
+        -------
+        str
+            The text with stopwords removed.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.remove_stopwords, text)
 
     def remove_internet_words(self, text: str) -> str:
         """
@@ -209,7 +339,102 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    def sigma_cleaner(self, text: str, is_token: bool = False, is_lower: bool = False):
+    async def remove_internet_words_async(self, text: str) -> str:
+        """
+        Asynchronously remove internet slang words from the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text containing internet slang words.
+
+        Returns:
+        -------
+        str
+            The text with internet slang words replaced.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.remove_internet_words, text)
+
+    def lemmatize_text(self, text: str, pos: str = "v") -> str:
+        """
+        Lemmatize the words in the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text to lemmatize.
+        pos : str, optional
+            Part of speech for lemmatization. Default is "v" (verb).
+
+        Returns:
+        -------
+        str
+            The text with lemmatized words.
+        """
+        words = text.lower().split()
+        return " ".join([lemmatizer.lemmatize(word, pos=pos) for word in words])
+
+    async def lemmatize_text_async(self, text: str, pos: str = "v") -> str:
+        """
+        Asynchronously lemmatize the words in the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text to lemmatize.
+        pos : str, optional
+            Part of speech for lemmatization. Default is "v" (verb).
+
+        Returns:
+        -------
+        str
+            The text with lemmatized words.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, partial(self.lemmatize_text, pos=pos), text)
+
+    def stem_text(self, text: str) -> str:
+        """
+        Apply stemming to the words in the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text to stem.
+
+        Returns:
+        -------
+        str
+            The text with stemmed words.
+        """
+        ps = PorterStemmer()
+        words = text.lower().split()
+        return " ".join([ps.stem(word) for word in words])
+
+    async def stem_text_async(self, text: str) -> str:
+        """
+        Asynchronously apply stemming to the words in the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text to stem.
+
+        Returns:
+        -------
+        str
+            The text with stemmed words.
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.stem_text, text)
+
+    def sigma_cleaner(self, text: str, 
+                     is_token: bool = False, 
+                     is_lower: bool = False,
+                     is_lemmatize: bool = False, 
+                     is_stemming: bool = False,
+                     keep_numbers: bool = True) -> Union[str, List[str]]:
         """
         Apply all cleaning methods to the input text.
 
@@ -221,34 +446,287 @@ class TextPrettifier:
             If True, returns the text as a list of tokens. Default is False.
         is_lower : bool, optional
             If True, converts the text to lowercase. Default is False.
+        is_lemmatize : bool, optional
+            If True, lemmatizes the text. Default is False.
+        is_stemming : bool, optional
+            If True, applies stemming to the text. Default is False.
+        keep_numbers : bool, optional
+            If True, keeps numbers in the text. Default is True.
 
         Returns:
         -------
-        str or list
+        Union[str, List[str]]
             Cleaned text as a string or list of tokens based on `is_token`.
         
         Example:
         --------
         >>> cleaner = TextPrettifier()
         >>> cleaner.sigma_cleaner('Hello <b>world</b>! 123 :)', is_token=True, is_lower=True)
-        ['hello', 'world', '']
+        ['hello', 'world', '123']
         """
         text = self.remove_emojis(text)
         text = self.remove_internet_words(text)
         text = self.remove_html_tags(text)
         text = self.remove_urls(text)
-        text = self.remove_numbers(text)
+        if not keep_numbers:
+            text = self.remove_numbers(text)
         text = self.remove_special_chars(text)
         text = self.remove_contractions(text)
         text = self.remove_stopwords(text)
-        if is_lower and is_token:
-            return text.lower().split()
-        elif is_lower:
-            return text.lower()
-        elif is_token:
+        
+        if is_lower:
+            text = text.lower()
+            
+        if is_lemmatize:
+            text = self.lemmatize_text(text)
+        elif is_stemming:
+            text = self.stem_text(text)
+            
+        if is_token:
             return text.split()
-        else:
-            return text
+        
+        return text
+
+    async def sigma_cleaner_async(self, text: str, 
+                                 is_token: bool = False, 
+                                 is_lower: bool = False,
+                                 is_lemmatize: bool = False, 
+                                 is_stemming: bool = False,
+                                 keep_numbers: bool = True) -> Union[str, List[str]]:
+        """
+        Asynchronously apply all cleaning methods to the input text.
+
+        Parameters:
+        ----------
+        text : str
+            The input text to be cleaned.
+        is_token : bool, optional
+            If True, returns the text as a list of tokens. Default is False.
+        is_lower : bool, optional
+            If True, converts the text to lowercase. Default is False.
+        is_lemmatize : bool, optional
+            If True, lemmatizes the text. Default is False.
+        is_stemming : bool, optional
+            If True, applies stemming to the text. Default is False.
+        keep_numbers : bool, optional
+            If True, keeps numbers in the text. Default is True.
+
+        Returns:
+        -------
+        Union[str, List[str]]
+            Cleaned text as a string or list of tokens based on `is_token`.
+        """
+        text = await self.remove_emojis_async(text)
+        text = await self.remove_internet_words_async(text)
+        text = await self.remove_html_tags_async(text)
+        text = await self.remove_urls_async(text)
+        if not keep_numbers:
+            text = await self.remove_numbers_async(text)
+        text = await self.remove_special_chars_async(text)
+        text = await self.remove_contractions_async(text)
+        text = await self.remove_stopwords_async(text)
+        
+        if is_lower:
+            text = text.lower()
+            
+        if is_lemmatize:
+            text = await self.lemmatize_text_async(text)
+        elif is_stemming:
+            text = await self.stem_text_async(text)
+            
+        if is_token:
+            return text.split()
+        
+        return text
+
+    def process_batch(self, texts: List[str], 
+                     is_token: bool = False, 
+                     is_lower: bool = False,
+                     is_lemmatize: bool = False, 
+                     is_stemming: bool = False,
+                     keep_numbers: bool = True) -> List[Union[str, List[str]]]:
+        """
+        Process a batch of texts in parallel using multithreading.
+
+        Parameters:
+        ----------
+        texts : List[str]
+            List of input texts to be cleaned.
+        is_token : bool, optional
+            If True, returns each text as a list of tokens. Default is False.
+        is_lower : bool, optional
+            If True, converts each text to lowercase. Default is False.
+        is_lemmatize : bool, optional
+            If True, lemmatizes each text. Default is False.
+        is_stemming : bool, optional
+            If True, applies stemming to each text. Default is False.
+        keep_numbers : bool, optional
+            If True, keeps numbers in each text. Default is True.
+
+        Returns:
+        -------
+        List[Union[str, List[str]]]
+            List of cleaned texts.
+        """
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            func = partial(
+                self.sigma_cleaner,
+                is_token=is_token,
+                is_lower=is_lower,
+                is_lemmatize=is_lemmatize,
+                is_stemming=is_stemming,
+                keep_numbers=keep_numbers
+            )
+            results = list(executor.map(func, texts))
+        return results
+
+    async def process_batch_async(self, texts: List[str], 
+                                 is_token: bool = False, 
+                                 is_lower: bool = False,
+                                 is_lemmatize: bool = False, 
+                                 is_stemming: bool = False,
+                                 keep_numbers: bool = True) -> List[Union[str, List[str]]]:
+        """
+        Asynchronously process a batch of texts in parallel.
+
+        Parameters:
+        ----------
+        texts : List[str]
+            List of input texts to be cleaned.
+        is_token : bool, optional
+            If True, returns each text as a list of tokens. Default is False.
+        is_lower : bool, optional
+            If True, converts each text to lowercase. Default is False.
+        is_lemmatize : bool, optional
+            If True, lemmatizes each text. Default is False.
+        is_stemming : bool, optional
+            If True, applies stemming to each text. Default is False.
+        keep_numbers : bool, optional
+            If True, keeps numbers in each text. Default is True.
+
+        Returns:
+        -------
+        List[Union[str, List[str]]]
+            List of cleaned texts.
+        """
+        tasks = [
+            self.sigma_cleaner_async(
+                text,
+                is_token=is_token,
+                is_lower=is_lower,
+                is_lemmatize=is_lemmatize,
+                is_stemming=is_stemming,
+                keep_numbers=keep_numbers
+            )
+            for text in texts
+        ]
+        return await asyncio.gather(*tasks)
+
+    def chunk_and_process(self, text: str, chunk_size: int = 10000, 
+                         is_token: bool = False, 
+                         is_lower: bool = False,
+                         is_lemmatize: bool = False, 
+                         is_stemming: bool = False,
+                         keep_numbers: bool = True) -> str:
+        """
+        Process a large text by splitting it into chunks and processing in parallel.
+
+        Parameters:
+        ----------
+        text : str
+            The large input text to be processed.
+        chunk_size : int, optional
+            The size of each chunk in characters. Default is 10000.
+        is_token : bool, optional
+            If True, returns the text as a list of tokens. Default is False.
+        is_lower : bool, optional
+            If True, converts the text to lowercase. Default is False.
+        is_lemmatize : bool, optional
+            If True, lemmatizes the text. Default is False.
+        is_stemming : bool, optional
+            If True, applies stemming to the text. Default is False.
+        keep_numbers : bool, optional
+            If True, keeps numbers in the text. Default is True.
+
+        Returns:
+        -------
+        Union[str, List[str]]
+            Processed text, either as a string or list of tokens.
+        """
+        # Chunk the text
+        chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+        
+        # Process chunks in parallel
+        processed_chunks = self.process_batch(
+            chunks,
+            is_token=False,  # We'll tokenize at the end if needed
+            is_lower=is_lower,
+            is_lemmatize=is_lemmatize,
+            is_stemming=is_stemming,
+            keep_numbers=keep_numbers
+        )
+        
+        # Combine results
+        result = " ".join(processed_chunks)
+        
+        # Tokenize if requested
+        if is_token:
+            return result.split()
+        
+        return result
+
+    async def chunk_and_process_async(self, text: str, chunk_size: int = 10000, 
+                                     is_token: bool = False, 
+                                     is_lower: bool = False,
+                                     is_lemmatize: bool = False, 
+                                     is_stemming: bool = False,
+                                     keep_numbers: bool = True) -> str:
+        """
+        Asynchronously process a large text by splitting it into chunks and processing in parallel.
+
+        Parameters:
+        ----------
+        text : str
+            The large input text to be processed.
+        chunk_size : int, optional
+            The size of each chunk in characters. Default is 10000.
+        is_token : bool, optional
+            If True, returns the text as a list of tokens. Default is False.
+        is_lower : bool, optional
+            If True, converts the text to lowercase. Default is False.
+        is_lemmatize : bool, optional
+            If True, lemmatizes the text. Default is False.
+        is_stemming : bool, optional
+            If True, applies stemming to the text. Default is False.
+        keep_numbers : bool, optional
+            If True, keeps numbers in the text. Default is True.
+
+        Returns:
+        -------
+        Union[str, List[str]]
+            Processed text, either as a string or list of tokens.
+        """
+        # Chunk the text
+        chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
+        
+        # Process chunks in parallel
+        processed_chunks = await self.process_batch_async(
+            chunks,
+            is_token=False,  # We'll tokenize at the end if needed
+            is_lower=is_lower,
+            is_lemmatize=is_lemmatize,
+            is_stemming=is_stemming,
+            keep_numbers=keep_numbers
+        )
+        
+        # Combine results
+        result = " ".join(processed_chunks)
+        
+        # Tokenize if requested
+        if is_token:
+            return result.split()
+        
+        return result
 
     def __str__(self) -> str:
         """
@@ -268,7 +746,30 @@ class TextPrettifier:
         return "Purify the Text!!"
 
 if __name__ == "__main__":
-    tp=TextPrettifier()
-    text="Hello, how are you?"
-    print(tp.sigma_cleaner(text,is_token=True,is_lower=True))
+    tp = TextPrettifier()
+    text = "Hello, how are you?"
+    print(tp.sigma_cleaner(text, is_token=True, is_lower=True))
     
+    # Example of batch processing
+    texts = ["Hello, how are you?", "I'm doing well!", "<p>HTML content</p>"]
+    results = tp.process_batch(texts, is_lower=True)
+    print(results)
+    
+    # Example of processing a large text
+    large_text = "Hello, how are you?" * 1000
+    result = tp.chunk_and_process(large_text, chunk_size=1000, is_lower=True)
+    print(f"Processed {len(large_text)} characters, result length: {len(result)}")
+    
+    # Example of using async (requires running in an async context)
+    async def async_example():
+        result = await tp.sigma_cleaner_async("Hello, how are you?", is_lower=True)
+        print(result)
+        
+        batch_results = await tp.process_batch_async(texts, is_lower=True)
+        print(batch_results)
+        
+        large_result = await tp.chunk_and_process_async(large_text, chunk_size=1000, is_lower=True)
+        print(f"Async processed {len(large_text)} characters, result length: {len(large_result)}")
+    
+    # You would run this in an async environment:
+    # asyncio.run(async_example())

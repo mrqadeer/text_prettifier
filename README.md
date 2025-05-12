@@ -1,38 +1,48 @@
 # TextPrettifier
 
-TextPrettifier is a Python library for cleaning text data by removing HTML tags, URLs, numbers, special characters, contractions, and stopwords.
-## TextPrettifier Key Features
+TextPrettifier is a Python library for cleaning text data by removing HTML tags, URLs, numbers, special characters, contractions, and stopwords. It now features asynchronous processing and multithreading capabilities for efficient processing of large texts.
 
-### 1. Removing Emojis
+## Key Features
+
+### Text Cleaning Features
+
+#### 1. Removing Emojis
 The `remove_emojis` method removes emojis from the text.
 
-### 2. Removing Internet Words
+#### 2. Removing Internet Words
 The `remove_internet_words` method removes internet-specific words from the text.
 
-### 3. Removing HTML Tags
+#### 3. Removing HTML Tags
 The `remove_html_tags` method removes HTML tags from the text.
 
-### 4. Removing URLs
+#### 4. Removing URLs
 The `remove_urls` method removes URLs from the text.
 
-### 5. Removing Numbers
+#### 5. Removing Numbers
 The `remove_numbers` method removes numbers from the text.
 
-### 6. Removing Special Characters
+#### 6. Removing Special Characters
 The `remove_special_chars` method removes special characters from the text.
 
-### 7. Expanding Contractions
+#### 7. Expanding Contractions
 The `remove_contractions` method expands contractions in the text.
 
-### 8. Removing Stopwords
+#### 8. Removing Stopwords
 The `remove_stopwords` method removes stopwords from the text.
 
-### Additional Functionality
-- If `is_lower` and `is_token` are both `True`, the text is returned in lowercase and as a list of tokens.
-- If only `is_lower` is `True`, the text is returned in lowercase.
-- If only `is_token` is `True`, the text is returned as a list of tokens.
-- If neither `is_lower` nor `is_token` is `True`, the text is returned as is.
+### Advanced Processing Features
 
+#### 9. Asynchronous Processing
+All methods have async counterparts (e.g., `remove_emojis_async`) for non-blocking operations.
+
+#### 10. Batch Processing
+Process multiple texts in parallel with `process_batch` and `process_batch_async`.
+
+#### 11. Chunked Processing for Large Texts
+Efficiently process large texts with `chunk_and_process` and `chunk_and_process_async`.
+
+#### 12. Lemmatization and Stemming
+Apply lemmatization or stemming to text with dedicated methods.
 
 ## Installation
 
@@ -41,93 +51,132 @@ You can install TextPrettifier using pip:
 ```bash
 pip install text-prettifier
 ```
+
+## Quick Start
+
+### Basic Usage
+
 ```python
 from text_prettifier import TextPrettifier
-```
-### Initialize TextPrettifier
+
+# Initialize TextPrettifier
 text_prettifier = TextPrettifier()
 
-#### Example: Remove Emojis
-```python
+# Example: Remove Emojis
 html_text = "Hi,Pythonogist! I ❤️ Python."
 cleaned_html = text_prettifier.remove_emojis(html_text)
-print(cleaned_html)
-```
-**Output**
-Hi,Pythonogist! I Python.
-#### Example: Remove HTML tags
-```python
-html_text = "<p>Hello, <b>world</b>!</p>"
-cleaned_html = text_prettifier.remove_html_tags(html_text)
-print(cleaned_html)
-```
-**Output**
-Hello,world!
-#### Example: Remove URLs
-```python
-url_text = "Visit our website at https://example.com"
-cleaned_urls = text_prettifier.remove_urls(url_text)
-print(cleaned_urls)
-```
-**Output**
-Visit our webiste at
-#### Example: Remove numbers
-```python
-number_text = "There are 123 apples"
-cleaned_numbers = text_prettifier.remove_numbers(number_text)
-print(cleaned_numbers)
-```
-**Output**
-There are apples
-#### Example: Remove special characters
-```python
-special_text = "Hello, @world!"
-cleaned_special = text_prettifier.remove_special_chars(special_text)
-print(cleaned_special)
-```
-**Output**
-Hello world
-#### Example: Remove contractions
-```python
-contraction_text = "I can't do it"
-cleaned_contractions = text_prettifier.remove_contractions(contraction_text)
-print(cleaned_contractions)
-```
-**Output**
-I cannot do it
-#### Example: Remove stopwords
-```python
-stopwords_text = "This is a test"
-cleaned_stopwords = text_prettifier.remove_stopwords(stopwords_text)
-print(cleaned_stopwords)
-```
-**Output**
-This test
-#### Example: Apply all cleaning methods
-```python
+print(cleaned_html)  # Output: Hi,Pythonogist! I Python.
+
+# Example: Apply all cleaning methods
 all_text = "<p>Hello, @world!</p> There are 123 apples. I can't do it. This is a test."
-all_cleaned = text_prettifier.sigma_cleaner(all_text)
-print(all_cleaned)
+all_cleaned = text_prettifier.sigma_cleaner(all_text, is_lower=True)
+print(all_cleaned)  # Output: hello world 123 apples cannot test
 
+# Get tokens with cleaning
+tokens = text_prettifier.sigma_cleaner(all_text, is_token=True, is_lower=True)
+print(tokens)  # Output: ['hello', 'world', '123', 'apples', 'cannot', 'test']
 ```
-**Output**
-Hello world 123 apples cannot test
 
+### Asynchronous Processing
 
-```If you are interested to tokenized and lower the cleaned text write the code```
 ```python
-all_text = "<p>Hello, @world!</p> There are 123 apples. I can't do it. This is a test."
-all_cleaned = text_prettifier.sigma_cleaner(all_text,is_token=True,is_lower=True)
-print(all_cleaned)
+import asyncio
+from text_prettifier import TextPrettifier
 
+async def process_text():
+    text_prettifier = TextPrettifier()
+    
+    text = "Hello, @world! 123 I can't believe it. 😊"
+    result = await text_prettifier.sigma_cleaner_async(text, is_lower=True)
+    print(result)  # Output: hello world 123 cannot believe
+
+# Run the async function
+asyncio.run(process_text())
 ```
-**Output**
-['Hello','world', '123','apples', 'cannot','test']
 
-**Note:** I didn't include ```remove_numbers``` in ```sigma_cleaner``` because sometimes numbers carry useful information in term of NLP. If you want to remove number you can apply this method seperately on output of ```sigma_cleaner```.
+### Batch Processing
 
+```python
+from text_prettifier import TextPrettifier
 
-### Contact Information
+# Initialize with specific number of worker threads
+text_prettifier = TextPrettifier(max_workers=4)
+
+# Process multiple texts in parallel
+texts = [
+    "Hello, how are you? 😊",
+    "<p>This is HTML</p> content",
+    "Visit https://example.com for more info",
+    "I can't believe it's not butter!"
+]
+
+# Synchronous batch processing
+results = text_prettifier.process_batch(texts, is_lower=True)
+for text, result in zip(texts, results):
+    print(f"Original: {text}")
+    print(f"Cleaned: {result}")
+    print()
+```
+
+### Processing Large Texts
+
+```python
+from text_prettifier import TextPrettifier
+
+text_prettifier = TextPrettifier()
+
+# Create a large text for demonstration
+large_text = "Hello, this is a sample text with some HTML <p>tags</p> and URLs https://example.com and emojis 😊" * 1000
+
+# Process the large text efficiently by chunking
+result = text_prettifier.chunk_and_process(
+    large_text,
+    chunk_size=5000,  # Process in chunks of 5000 characters
+    is_lower=True,
+    keep_numbers=True
+)
+
+print(f"Original length: {len(large_text)}")
+print(f"Processed length: {len(result)}")
+```
+
+### Lemmatization and Stemming
+
+```python
+from text_prettifier import TextPrettifier
+
+text_prettifier = TextPrettifier()
+
+text = "I am running in the park with friends"
+
+# Apply lemmatization
+lemmatized = text_prettifier.sigma_cleaner(text, is_lemmatize=True)
+print(lemmatized)  # Output: I run park friend
+
+# Apply stemming
+stemmed = text_prettifier.sigma_cleaner(text, is_stemming=True)
+print(stemmed)  # Output: I run park friend
+```
+
+## Advanced Configuration
+
+TextPrettifier supports various configuration options:
+
+```python
+text_prettifier = TextPrettifier(max_workers=8)  # Set maximum worker threads
+
+# Configure sigma_cleaner options
+result = text_prettifier.sigma_cleaner(
+    text,
+    is_token=True,       # Return tokens instead of a string
+    is_lower=True,       # Convert to lowercase
+    is_lemmatize=True,   # Apply lemmatization
+    is_stemming=False,   # Don't apply stemming (would override lemmatization)
+    keep_numbers=True    # Keep numbers in the text
+)
+```
+
+## Contact Information
 
 Feel free to reach out to me on social media:
 
@@ -135,9 +184,6 @@ Feel free to reach out to me on social media:
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Qadeer)](https://www.linkedin.com/in/qadeer-ahmad-3499a4205/)
 [![Twitter](https://img.shields.io/badge/Twitter-Twitter)](https://twitter.com/mr_sin_of_me)
 [![Facebook](https://img.shields.io/badge/Facebook-Facebook)](https://web.facebook.com/mrqadeerofficial/)
-
-
-
 
 ## License
 
