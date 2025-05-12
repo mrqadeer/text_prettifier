@@ -52,7 +52,7 @@ class TextPrettifier:
         """
         return self.__EMOJI_PATTERN.sub(r'', text)
 
-    async def remove_emojis_async(self, text: str) -> str:
+    async def aremove_emojis(self, text: str) -> str:
         """
         Asynchronously remove emojis from the input text.
 
@@ -93,7 +93,7 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    async def remove_html_tags_async(self, text: str) -> str:
+    async def aremove_html_tags(self, text: str) -> str:
         """
         Asynchronously remove HTML tags from the input text.
 
@@ -134,7 +134,7 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    async def remove_urls_async(self, text: str) -> str:
+    async def aremove_urls(self, text: str) -> str:
         """
         Asynchronously remove URLs from the input text.
 
@@ -175,7 +175,7 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    async def remove_numbers_async(self, text: str) -> str:
+    async def aremove_numbers(self, text: str) -> str:
         """
         Asynchronously remove numbers from the input text.
 
@@ -216,7 +216,7 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    async def remove_special_chars_async(self, text: str) -> str:
+    async def aremove_special_chars(self, text: str) -> str:
         """
         Asynchronously remove special characters and punctuations from the input text.
 
@@ -257,7 +257,7 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    async def remove_contractions_async(self, text: str) -> str:
+    async def aremove_contractions(self, text: str) -> str:
         """
         Asynchronously expand contractions in the input text.
 
@@ -298,7 +298,7 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    async def remove_stopwords_async(self, text: str) -> str:
+    async def aremove_stopwords(self, text: str) -> str:
         """
         Asynchronously remove stopwords from the input text.
 
@@ -339,7 +339,7 @@ class TextPrettifier:
         text = re.sub(r'\s+', ' ', text).strip()
         return text
 
-    async def remove_internet_words_async(self, text: str) -> str:
+    async def aremove_internet_words(self, text: str) -> str:
         """
         Asynchronously remove internet slang words from the input text.
 
@@ -375,7 +375,7 @@ class TextPrettifier:
         words = text.lower().split()
         return " ".join([lemmatizer.lemmatize(word, pos=pos) for word in words])
 
-    async def lemmatize_text_async(self, text: str, pos: str = "v") -> str:
+    async def alemmatize_text(self, text: str, pos: str = "v") -> str:
         """
         Asynchronously lemmatize the words in the input text.
 
@@ -412,7 +412,7 @@ class TextPrettifier:
         words = text.lower().split()
         return " ".join([ps.stem(word) for word in words])
 
-    async def stem_text_async(self, text: str) -> str:
+    async def astem_text(self, text: str) -> str:
         """
         Asynchronously apply stemming to the words in the input text.
 
@@ -487,7 +487,7 @@ class TextPrettifier:
         
         return text
 
-    async def sigma_cleaner_async(self, text: str, 
+    async def asigma_cleaner(self, text: str, 
                                  is_token: bool = False, 
                                  is_lower: bool = False,
                                  is_lemmatize: bool = False, 
@@ -516,23 +516,23 @@ class TextPrettifier:
         Union[str, List[str]]
             Cleaned text as a string or list of tokens based on `is_token`.
         """
-        text = await self.remove_emojis_async(text)
-        text = await self.remove_internet_words_async(text)
-        text = await self.remove_html_tags_async(text)
-        text = await self.remove_urls_async(text)
+        text = await self.aremove_emojis(text)
+        text = await self.aremove_internet_words(text)
+        text = await self.aremove_html_tags(text)
+        text = await self.aremove_urls(text)
         if not keep_numbers:
-            text = await self.remove_numbers_async(text)
-        text = await self.remove_special_chars_async(text)
-        text = await self.remove_contractions_async(text)
-        text = await self.remove_stopwords_async(text)
+            text = await self.aremove_numbers(text)
+        text = await self.aremove_special_chars(text)
+        text = await self.aremove_contractions(text)
+        text = await self.aremove_stopwords(text)
         
         if is_lower:
             text = text.lower()
             
         if is_lemmatize:
-            text = await self.lemmatize_text_async(text)
+            text = await self.alemmatize_text(text)
         elif is_stemming:
-            text = await self.stem_text_async(text)
+            text = await self.astem_text(text)
             
         if is_token:
             return text.split()
@@ -580,7 +580,7 @@ class TextPrettifier:
             results = list(executor.map(func, texts))
         return results
 
-    async def process_batch_async(self, texts: List[str], 
+    async def aprocess_batch(self, texts: List[str], 
                                  is_token: bool = False, 
                                  is_lower: bool = False,
                                  is_lemmatize: bool = False, 
@@ -610,7 +610,7 @@ class TextPrettifier:
             List of cleaned texts.
         """
         tasks = [
-            self.sigma_cleaner_async(
+            self.asigma_cleaner(
                 text,
                 is_token=is_token,
                 is_lower=is_lower,
@@ -675,7 +675,7 @@ class TextPrettifier:
         
         return result
 
-    async def chunk_and_process_async(self, text: str, chunk_size: int = 10000, 
+    async def achunk_and_process(self, text: str, chunk_size: int = 10000, 
                                      is_token: bool = False, 
                                      is_lower: bool = False,
                                      is_lemmatize: bool = False, 
@@ -710,7 +710,7 @@ class TextPrettifier:
         chunks = [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
         
         # Process chunks in parallel
-        processed_chunks = await self.process_batch_async(
+        processed_chunks = await self.aprocess_batch(
             chunks,
             is_token=False,  # We'll tokenize at the end if needed
             is_lower=is_lower,
@@ -762,13 +762,13 @@ if __name__ == "__main__":
     
     # Example of using async (requires running in an async context)
     async def async_example():
-        result = await tp.sigma_cleaner_async("Hello, how are you?", is_lower=True)
+        result = await tp.asigma_cleaner("Hello, how are you?", is_lower=True)
         print(result)
         
-        batch_results = await tp.process_batch_async(texts, is_lower=True)
+        batch_results = await tp.aprocess_batch(texts, is_lower=True)
         print(batch_results)
         
-        large_result = await tp.chunk_and_process_async(large_text, chunk_size=1000, is_lower=True)
+        large_result = await tp.achunk_and_process(large_text, chunk_size=1000, is_lower=True)
         print(f"Async processed {len(large_text)} characters, result length: {len(large_result)}")
     
     # You would run this in an async environment:

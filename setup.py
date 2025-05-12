@@ -7,7 +7,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
     long_description = "\n" + fh.read()
 
-VERSION = '2.0.0'  # Updated version
+VERSION = '2.0.1'  # Updated version
 DESCRIPTION = "A Python library for cleaning and preprocessing text data with asynchronous and multithreading capabilities."
 
 

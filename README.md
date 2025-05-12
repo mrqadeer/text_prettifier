@@ -33,13 +33,13 @@ The `remove_stopwords` method removes stopwords from the text.
 ### Advanced Processing Features
 
 #### 9. Asynchronous Processing
-All methods have async counterparts (e.g., `remove_emojis_async`) for non-blocking operations.
+All methods have async counterparts prefixed with 'a' (e.g., `aremove_emojis`) for non-blocking operations.
 
 #### 10. Batch Processing
-Process multiple texts in parallel with `process_batch` and `process_batch_async`.
+Process multiple texts in parallel with `process_batch` and `aprocess_batch`.
 
 #### 11. Chunked Processing for Large Texts
-Efficiently process large texts with `chunk_and_process` and `chunk_and_process_async`.
+Efficiently process large texts with `chunk_and_process` and `achunk_and_process`.
 
 #### 12. Lemmatization and Stemming
 Apply lemmatization or stemming to text with dedicated methods.
@@ -87,7 +87,7 @@ async def process_text():
     text_prettifier = TextPrettifier()
     
     text = "Hello, @world! 123 I can't believe it. 😊"
-    result = await text_prettifier.sigma_cleaner_async(text, is_lower=True)
+    result = await text_prettifier.asigma_cleaner(text, is_lower=True)
     print(result)  # Output: hello world 123 cannot believe
 
 # Run the async function
@@ -116,6 +116,17 @@ for text, result in zip(texts, results):
     print(f"Original: {text}")
     print(f"Cleaned: {result}")
     print()
+
+# Asynchronous batch processing
+async def process_async():
+    results = await text_prettifier.aprocess_batch(texts, is_lower=True)
+    for text, result in zip(texts, results):
+        print(f"Original: {text}")
+        print(f"Cleaned: {result}")
+        print()
+
+# Run in an async environment
+# asyncio.run(process_async())
 ```
 
 ### Processing Large Texts
@@ -138,6 +149,20 @@ result = text_prettifier.chunk_and_process(
 
 print(f"Original length: {len(large_text)}")
 print(f"Processed length: {len(result)}")
+
+# Asynchronous processing of large text
+async def process_large_async():
+    result = await text_prettifier.achunk_and_process(
+        large_text,
+        chunk_size=5000,
+        is_lower=True,
+        keep_numbers=True
+    )
+    print(f"Original length: {len(large_text)}")
+    print(f"Processed length: {len(result)}")
+
+# Run in an async environment
+# asyncio.run(process_large_async())
 ```
 
 ### Lemmatization and Stemming
